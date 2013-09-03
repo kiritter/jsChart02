@@ -20,6 +20,7 @@ function createDataset() {
 	var LL_NM = LineChart.LL_NM;
 	var LL1 = 1.15;
 	var LL2 = 1.05;
+	var CL_SWITCH_DAYS = 11;
 
 	var HEADER_NAMES = ["Tokyo", "Paris", "New York"];
 	var ERR_SUFFIX = LineChart.ERR_SUFFIX;
@@ -39,7 +40,7 @@ function createDataset() {
 			num = math_round(Math.random() + 1, 4);
 			obj[HEADER_NAMES[j]] = num;
 			errmsg = "";
-			if (i < 11) {
+			if (i < CL_SWITCH_DAYS) {
 				if (num >= UL1) {
 					errmsg = "Err:UL";
 				}else if (num <= LL1) {
@@ -54,7 +55,7 @@ function createDataset() {
 			}
 			obj[HEADER_NAMES[j] + ERR_SUFFIX] = errmsg;
 		}
-		if (i < 11) {
+		if (i < CL_SWITCH_DAYS) {
 			obj[UL_NM] = UL1;
 			obj[LL_NM] = LL1;
 		}else{
