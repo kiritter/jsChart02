@@ -143,7 +143,9 @@ var LineChart = function() {
 
 	var drawLabelAxisX = function(svg, dataset, scaleX, scaleY, constObj) {
 		var labels = 
-		svg.selectAll("text.labelAxisX")
+		svg.append("g")
+			.attr("class", "axisX")
+			.selectAll("text.labelAxisX")
 			.data(dataset)
 			.enter()
 			.append("text")
@@ -172,13 +174,17 @@ var LineChart = function() {
 			tspan.attr("x", el.attr("x")).attr("dy", 10);
 		});
 
+		var gLine = 
+		svg.append("g")
+			.attr("class", "axisXTick");
+
 		labels.each(function(d, i) {
 			if (i % 2 === 0) {
 				return "";
 			}
 			var el = d3.select(this);
-			svg.append("line")
-				.attr("class", "axisYSub")
+			gLine.append("line")
+				.attr("class", "axisXTickLine")
 				.attr("x1", scaleX(d.date))
 				.attr("y1", scaleY(constObj.MAX_Y))
 				.attr("x2", scaleX(d.date))

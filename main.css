@@ -94,7 +94,7 @@ footer table .col2{
 	font-size: 10px;
 }
 
-.axisYSub {
+.axisXTickLine {
 	stroke: gray;
 	stroke-width: 0.5px;
 	stroke-dasharray: 2,5;
