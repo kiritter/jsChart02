@@ -98,28 +98,37 @@ var LineChart = function() {
 		return obj;
 	};
 
-	var calcScaleX = function(constObj, WIDTH, PADDING) {
+	var calcScaleX = function(constObj, chartSize) {
 		var scaleX = d3.time.scale()
 			.domain([constObj.MIN_X, constObj.MAX_X])
-			.range([PADDING.left, WIDTH - PADDING.right]);
+			.range([0, chartSize.WIDTH]);
 		return scaleX;
 	};
-	var calcScaleY = function(constObj, HEIGHT, PADDING) {
+	var calcScaleY = function(constObj, chartSize) {
 		var scaleY = d3.scale.linear()
 			.domain([constObj.MIN_Y, constObj.MAX_Y])
-			.range([HEIGHT - PADDING.bottom, PADDING.top]);
+			.range([chartSize.HEIGHT, 0]);
 		return scaleY;
 	};
 
-	var createElementSVG = function(elementId, WIDTH, HEIGHT) {
+	var createElementSVG = function(elementId, outerSize, MARGIN) {
 		var svg = d3.select(elementId)
 			.append("svg")
-			.attr("width", WIDTH)
-			.attr("height", HEIGHT);
+			.attr("width", outerSize.WIDTH)
+			.attr("height", outerSize.HEIGHT)
+			.append("g")
+			.attr("transform", "translate(" + MARGIN.left + "," + MARGIN.top + ")");
+
 		return svg;
 	};
+	var createElementChartG = function(svg, PADDING) {
+		var g = svg.append("g")
+			.attr("transform", "translate(" + PADDING.left + "," + PADDING.top + ")");
 
-	var drawAxis = function(svg, scaleX, scaleY, HEIGHT, PADDING) {
+		return g;
+	};
+
+	var drawAxis = function(chartG, scaleX, scaleY, chartSize) {
 		var xAxis = d3.svg.axis()
 			.scale(scaleX)
 			.orient("bottom")
@@ -130,20 +139,19 @@ var LineChart = function() {
 			.orient("left")
 			.ticks(10);
 
-		svg.append("g")
+		chartG.append("g")
 			.attr("class", "axis")
-			.attr("transform", "translate(0," + (HEIGHT - PADDING.bottom) + ")")
+			.attr("transform", "translate(0," + chartSize.HEIGHT + ")")
 			.call(xAxis);
 
-		svg.append("g")
+		chartG.append("g")
 			.attr("class", "axis")
-			.attr("transform", "translate(" + PADDING.left + ",0)")
 			.call(yAxis);
 	};
 
-	var drawLabelAxisX = function(svg, dataset, scaleX, scaleY, constObj) {
+	var drawLabelAxisX = function(chartG, dataset, scaleX, scaleY, constObj) {
 		var labels = 
-		svg.append("g")
+		chartG.append("g")
 			.attr("class", "axisX")
 			.selectAll("text.labelAxisX")
 			.data(dataset)
@@ -175,14 +183,13 @@ var LineChart = function() {
 		});
 
 		var gLine = 
-		svg.append("g")
+		chartG.append("g")
 			.attr("class", "axisXTick");
 
 		labels.each(function(d, i) {
 			if (i % 2 === 0) {
 				return "";
 			}
-			var el = d3.select(this);
 			gLine.append("line")
 				.attr("class", "axisXTickLine")
 				.attr("x1", scaleX(d.date))
@@ -192,7 +199,7 @@ var LineChart = function() {
 		});
 	};
 
-	var drawPathData = function(svg, datasetSeries, scaleX, scaleY, colors) {
+	var drawPathData = function(chartG, datasetSeries, scaleX, scaleY, colors) {
 		var line = 
 			d3.svg.line()
 				.x(function(d) {
@@ -203,7 +210,7 @@ var LineChart = function() {
 				});
 
 		var series = 
-			svg.selectAll(".series")
+			chartG.selectAll(".series")
 				.data(datasetSeries)
 				.enter()
 				.append("g")
@@ -308,8 +315,18 @@ var LineChart = function() {
 		var MARGIN = {top: 0, right: 20, bottom: 0, left: 0};
 		var PADDING = {top: 10, right: 50, bottom: 50, left: 30};
 
-		var WIDTH = 640 - (MARGIN.left + MARGIN.right);
-		var HEIGHT = 380 - (MARGIN.top + MARGIN.bottom);
+		var outerSize = {
+			WIDTH: 640
+			, HEIGHT: 380
+		};
+		var innerSize = {
+			WIDTH: outerSize.WIDTH - (MARGIN.left + MARGIN.right)
+			, HEIGHT: outerSize.HEIGHT - (MARGIN.top + MARGIN.bottom)
+		};
+		var chartSize = {
+			WIDTH: innerSize.WIDTH - (PADDING.left + PADDING.right)
+			, HEIGHT: innerSize.HEIGHT - (PADDING.top + PADDING.bottom)
+		};
 
 		//--------------------
 		convDateFromString(dataset);
@@ -318,20 +335,21 @@ var LineChart = function() {
 
 		//--------------------
 		var constMinMax = getConstMinMax(dataset, headerNames);
-		var scaleX = calcScaleX(constMinMax, WIDTH, PADDING);
-		var scaleY = calcScaleY(constMinMax, HEIGHT, PADDING);
+		var scaleX = calcScaleX(constMinMax, chartSize);
+		var scaleY = calcScaleY(constMinMax, chartSize);
 
 		//--------------------
 		var datasetSeries = convDataset(dataset, headerNames);
 
 		//--------------------
-		var svg = createElementSVG(elementId, WIDTH, HEIGHT);
+		var svg = createElementSVG(elementId, outerSize, MARGIN);
+		var chartG = createElementChartG(svg, PADDING);
 
-		drawAxis(svg, scaleX, scaleY, HEIGHT, PADDING);
+		drawAxis(chartG, scaleX, scaleY, chartSize);
 
-		drawLabelAxisX(svg, dataset, scaleX, scaleY, constMinMax);
+		drawLabelAxisX(chartG, dataset, scaleX, scaleY, constMinMax);
 
-		drawPathData(svg, datasetSeries, scaleX, scaleY, colors);
+		drawPathData(chartG, datasetSeries, scaleX, scaleY, colors);
 
 	};
 
